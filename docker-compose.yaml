@@ -1,0 +1,44 @@
+services:
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    ports:
+      - "3000:80"
+  api:
+    build:
+      context: backend/api
+      dockerfile: Dockerfile
+      target: jar
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8080:8080"
+  ingest:
+    build:
+      context: backend/ingest
+      dockerfile: Dockerfile
+      target: jar
+    depends_on:
+      - redis
+  postgres:
+    image: postgres:16.9-alpine@sha256:7c8c4bf319769e3daf2545ba435248edc650d3621de678db6d9846581036e3da
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  redis:
+    image: redis:8.0.0-alpine@sha256:0779069b3c24a47a2f681855c1c01d046793e7c5f7d2b079c2aa0652c42eaf0e
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata: {}
