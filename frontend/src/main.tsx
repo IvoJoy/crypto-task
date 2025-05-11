@@ -1,5 +1,4 @@
-import { StrictMode } from 'react'
-import ReactDOM from 'react-dom/client'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import {
   Outlet,
   RouterProvider,
@@ -8,19 +7,17 @@ import {
   createRouter,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-import DemoTable from './routes/demo.table.tsx'
-import DemoTanstackQuery from './routes/demo.tanstack-query.tsx'
-
-import Header from './components/Header.tsx'
-
-import TanstackQueryLayout from './integrations/tanstack-query/layout.tsx'
-
-import * as TanstackQuery from './integrations/tanstack-query/root-provider.tsx'
-
-import './styles.css'
-import reportWebVitals from './reportWebVitals.ts'
-
+import { StrictMode } from 'react'
+import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
+import Header from './components/Header.tsx'
+import {
+  ReactQueryProvider,
+  getReactQueryContext,
+} from './context/react-query.tsx'
+import reportWebVitals from './reportWebVitals.ts'
+import TickerTableRoute from './routes/tickers.tsx'
+import './styles.css'
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -28,49 +25,37 @@ const rootRoute = createRootRoute({
       <Header />
       <Outlet />
       <TanStackRouterDevtools />
-
-      <TanstackQueryLayout />
+      <ReactQueryDevtools buttonPosition="bottom-right" />
     </>
   ),
 })
 
-const indexRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/',
-  component: App,
-})
-
 const routeTree = rootRoute.addChildren([
-  indexRoute,
-  DemoTable(rootRoute),
-  DemoTanstackQuery(rootRoute),
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: App,
+  }),
+  TickerTableRoute(rootRoute),
 ])
 
 const router = createRouter({
   routeTree,
-  context: {
-    ...TanstackQuery.getContext(),
-  },
+  context: getReactQueryContext(),
   defaultPreload: 'intent',
   scrollRestoration: true,
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
 })
 
-declare module '@tanstack/react-router' {
-  interface Register {
-    router: typeof router
-  }
-}
-
 const rootElement = document.getElementById('app')
 if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>
-      <TanstackQuery.Provider>
+      <ReactQueryProvider>
         <RouterProvider router={router} />
-      </TanstackQuery.Provider>
+      </ReactQueryProvider>
     </StrictMode>,
   )
 }
