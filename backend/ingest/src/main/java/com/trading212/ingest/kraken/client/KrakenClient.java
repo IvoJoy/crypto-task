@@ -1,7 +1,6 @@
 package com.trading212.ingest.kraken.client;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.data.redis.core.RedisTemplate;

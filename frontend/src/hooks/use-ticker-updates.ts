@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { tickerUpdateSchema } from '../validation/ticker-update'
-import type { TickerUpdate } from '../validation/ticker-update'
+import { tickerSchema } from '../validation/ticker-update'
+import type { Ticker } from '../validation/ticker-update'
 
 export const useTickerUpdates = () => {
   const queryClient = useQueryClient()
@@ -22,10 +22,10 @@ export const useTickerUpdates = () => {
     client.onmessage = (msg) => {
       console.log('Received:', msg.data)
       const parsed = JSON.parse(msg.data)
-      const validated = tickerUpdateSchema.parse(parsed)
+      const validated = tickerSchema.parse(parsed)
       console.log(validated)
 
-      queryClient.setQueryData<Record<string, TickerUpdate>>(
+      queryClient.setQueryData<Record<string, Ticker>>(
         ['tickers'],
         (oldData) => {
           return {

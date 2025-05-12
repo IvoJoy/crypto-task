@@ -1,17 +1,36 @@
 import { useState } from 'react'
-import { useMutation, useQuery  } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { createRoute } from '@tanstack/react-router'
 import { useTickerUpdates } from '../hooks/use-ticker-updates'
+import { tickerUpdateSchema } from '../validation/ticker-update'
 import type { RootRoute } from '@tanstack/react-router'
 
 
-type Ticker = {
-  symbol: string
-  bid: number
-  ask: number
-  last: number
-  [key: string]: any
+// The info is not available in the Kraken WebSocket API, so we hardcode it here for demonstration purposes.
+// In a real-world application, you would fetch this data from the Kraken REST API.
+const symbolToName: Record<string, string> = {
+  'BTC/USD': 'Bitcoin',
+  'USDT/USD': 'Tether',
+  'ETH/USD': 'Ethereum',
+  'XRP/USD': 'Ripple',
+  'ADA/USD': 'Cardano',
+  'SOL/USD': 'Solana',
+  'DOGE/USD': 'Dogecoin',
+  'DOT/USD': 'Polkadot',
+  'LTC/USD': 'Litecoin',
+  'LINK/USD': 'Chainlink',
+  'BCH/USD': 'Bitcoin Cash',
+  'XLM/USD': 'Stellar',
+  'FIL/USD': 'Filecoin',
+  'EOS/USD': 'EOS',
+  'TRX/USD': 'TRON',
+  'ETC/USD': 'Ethereum Classic',
+  'UNI/USD': 'Uniswap',
+  'MATIC/USD': 'Polygon',
+  'AAVE/USD': 'Aave',
+  'ALGO/USD': 'Algorand',
 }
+
 
 const apiHost = import.meta.env.VITE_API_HOST || 'localhost'
 
@@ -23,17 +42,28 @@ function TradePage() {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Fetch tickers
-useTickerUpdates()
-  const { data: tickers, isLoading } = useQuery({
-    queryKey: ['tickers'],
+  // Fetch users for dropdown
+  const { data: users, isLoading: usersLoading } = useQuery({
+    queryKey: ['users'],
     queryFn: async () => {
-      const res = await fetch(`http://${apiHost}:8080/api/v1/tickers`)
-      if (!res.ok) throw new Error('Failed to fetch tickers')
-      return res.json() as Promise<Record<string, Ticker>>
-    },
-    initialData: {},
+      const res = await fetch(`http://${apiHost}:8080/api/v1/users`)
+      if (!res.ok) throw new Error('Failed to fetch users')
+      return res.json() as Promise<Array<{ id: number; username: string }>>
+    }
   })
+
+  // Fetch tickers
+  useTickerUpdates()
+  
+const { data: tickers, isLoading } = useQuery({
+  queryKey: ['tickers'],
+  queryFn: async () => {
+    const res = await fetch(`http://${apiHost}:8080/api/v1/tickers`)
+    if (!res.ok) throw new Error('Failed to fetch tickers')
+    const json = await res.json()
+    return tickerUpdateSchema.parse(json)
+  },
+})
 
   // Buy mutation
   const buyMutation = useMutation({
@@ -83,8 +113,8 @@ useTickerUpdates()
     e.preventDefault()
     setMessage(null)
     setError(null)
-    if (!userId || isNaN(Number(userId))) {
-      setError('Please enter a valid user ID')
+    if (!userId) {
+      setError('Please select a user')
       return
     }
     const payload = { userId: Number(userId), symbol, quantity }
@@ -100,14 +130,21 @@ useTickerUpdates()
       <h2>Trade Crypto</h2>
       <form onSubmit={handleSubmit} className="flex flex-col gap-2 max-w-md">
         <label>
-          User ID:
-          <input
-            type="number"
-            min="1"
+          User:
+          <select
             value={userId}
             onChange={e => setUserId(e.target.value)}
             required
-          />
+            disabled={usersLoading}
+          >
+            <option value="">Select user</option>
+            {users &&
+              users.map(user => (
+                <option key={user.id} value={user.id}>
+                  {user.username}
+                </option>
+              ))}
+          </select>
         </label>
         <label>
           Symbol:
@@ -141,7 +178,7 @@ useTickerUpdates()
         </label>
         <button
           type="submit"
-          disabled={buyMutation.isPending || sellMutation.isPending || isLoading}
+          disabled={buyMutation.isPending || sellMutation.isPending || isLoading || usersLoading}
         >
           {action === 'buy' ? 'Buy' : 'Sell'}
         </button>
@@ -153,6 +190,7 @@ useTickerUpdates()
       <table className="min-w-full border mt-2">
         <thead>
           <tr>
+            <th className="border px-2">Name</th>
             <th className="border px-2">Symbol</th>
             <th className="border px-2">Last</th>
             <th className="border px-2">Bid</th>
@@ -163,6 +201,7 @@ useTickerUpdates()
           {tickers &&
             Object.values(tickers).map(ticker => (
               <tr key={ticker.symbol}>
+                <td className="border px-2">{symbolToName[ticker.symbol] || ticker.symbol}</td>
                 <td className="border px-2">{ticker.symbol}</td>
                 <td className="border px-2">{ticker.last}</td>
                 <td className="border px-2">{ticker.bid}</td>
@@ -177,7 +216,7 @@ useTickerUpdates()
 
 export default (parentRoute: RootRoute) =>
   createRoute({
-    path: '/trade',
+    path: '/',
     component: TradePage,
     getParentRoute: () => parentRoute,
   })

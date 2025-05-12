@@ -2,20 +2,21 @@ import {
   Outlet,
   RouterProvider,
   createRootRoute,
-  createRoute,
   createRouter,
 } from '@tanstack/react-router'
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.tsx'
 import Header from './components/Header.tsx'
 import {
   ReactQueryProvider,
   getReactQueryContext,
 } from './context/react-query.tsx'
 import reportWebVitals from './reportWebVitals.ts'
-import UserRoute from './routes/user.tsx'
+import RegisterRoute from './routes/register.tsx'
 import TradeRoute from './routes/trade.tsx'
+import UserAccountPage from './routes/user.tsx'
+import UsersPage from './routes/users.tsx'
+import UserHoldingsPage from './routes/holdings.tsx'
 import './styles.css'
 
 const rootRoute = createRootRoute({
@@ -28,13 +29,13 @@ const rootRoute = createRootRoute({
 })
 
 const routeTree = rootRoute.addChildren([
-  createRoute({
-    getParentRoute: () => rootRoute,
-    path: '/',
-    component: App,
-  }),
-  UserRoute(rootRoute),
-  TradeRoute(rootRoute)
+ 
+  RegisterRoute(rootRoute),
+  TradeRoute(rootRoute),
+  UserAccountPage(rootRoute),
+  UsersPage(rootRoute),
+  UserHoldingsPage(rootRoute),
+
 ])
 
 const router = createRouter({
