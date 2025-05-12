@@ -7,11 +7,6 @@ export default function Header() {
         <div className="px-2 font-bold">
           <Link to="/">Real-time data and trading</Link>
         </div>
-
-        <div className="px-2 font-bold">
-          <Link to="/">?</Link>
-        </div>
-
         <div className="px-2 font-bold">
           <Link to="/register">Create User</Link>
         </div>

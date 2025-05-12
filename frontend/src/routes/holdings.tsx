@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { createRoute, useParams } from '@tanstack/react-router'
 import type { RootRoute } from '@tanstack/react-router'
 
@@ -19,7 +19,7 @@ export function UserHoldingsPage() {
   })
 
   // Fetch balance
-  const { data: balanceData, isLoading: balanceLoading } = useQuery({
+  const { data: balanceData, isLoading: balanceLoading, refetch: refetchBalance } = useQuery({
     queryKey: ['balance', userId],
     queryFn: async () => {
       const res = await fetch(`http://${apiHost}:8080/api/v1/users/${userId}/balance`)
@@ -29,12 +29,28 @@ export function UserHoldingsPage() {
   })
 
   // Fetch holdings (crypto portfolio)
-  const { data: holdings, isLoading: holdingsLoading } = useQuery({
+  const { data: holdings, isLoading: holdingsLoading, refetch: refetchHoldings } = useQuery({
     queryKey: ['holdings', userId],
     queryFn: async () => {
       const res = await fetch(`http://${apiHost}:8080/api/v1/users/${userId}/holdings`)
       if (!res.ok) throw new Error('Failed to fetch holdings')
       return res.json() as Promise<Array<{ symbol: string; amount: number }>>
+    }
+  })
+
+  // Reset mutation
+  const resetMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`http://${apiHost}:8080/api/v1/users/${userId}/reset`, {
+        method: 'POST'
+      })
+      if (!res.ok) throw new Error('Failed to reset account')
+      return res.json()
+    },
+    onSuccess: () => {
+      refetchBalance()
+      refetchHoldings()
+      alert('Account reset to $10,000 and holdings cleared.')
     }
   })
 
@@ -45,6 +61,13 @@ export function UserHoldingsPage() {
     <div>
       <h2>User Info: {user.username}</h2>
       <div><strong>Balance:</strong> ${balanceData?.balance ?? '...'}</div>
+      <button
+        onClick={() => resetMutation.mutate()}
+        disabled={resetMutation.isPending}
+        style={{ margin: '1em 0', padding: '0.5em 1em' }}
+      >
+        {resetMutation.isPending ? 'Resetting...' : 'Reset Account'}
+      </button>
       <h3 className="mt-4">Crypto Portfolio</h3>
       {holdings && holdings.length > 0 ? (
         <table className="min-w-full border mt-2">

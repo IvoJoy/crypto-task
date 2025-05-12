@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { createRoute, useParams } from '@tanstack/react-router'
 import type { RootRoute } from '@tanstack/react-router'
 
@@ -19,7 +19,7 @@ export function UserAccountPage() {
   })
 
   // Fetch balance
-  const { data: balanceData, refetch: refetchBalance } = useQuery({
+  const { data: balanceData } = useQuery({
     queryKey: ['balance', userId],
     queryFn: async () => {
       const res = await fetch(`http://${apiHost}:8080/api/v1/users/${userId}/balance`)
@@ -29,7 +29,7 @@ export function UserAccountPage() {
   })
 
   // Fetch transaction history
-  const { data: historyData, refetch: refetchHistory } = useQuery({
+  const { data: historyData } = useQuery({
     queryKey: ['history', userId],
     queryFn: async () => {
       const res = await fetch(`http://${apiHost}:8080/api/v1/users/${userId}/history`)
@@ -38,21 +38,7 @@ export function UserAccountPage() {
     }
   })
 
-  // Reset mutation
-  const resetMutation = useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`http://${apiHost}:8080/api/v1/users/${userId}/reset`, {
-        method: 'POST'
-      })
-      if (!res.ok) throw new Error('Failed to reset account')
-      return res.json()
-    },
-    onSuccess: () => {
-      refetchBalance()
-      refetchHistory()
-      alert('Account reset to $10,000 and holdings cleared.')
-    }
-  })
+  
 
   if (!user) return <div>Loading user...</div>
 
@@ -60,13 +46,6 @@ export function UserAccountPage() {
     <div>
       <h2>User: {user.username}</h2>
       <div><strong>Balance:</strong> ${balanceData?.balance ?? '...'}</div>
-      <button
-        onClick={() => resetMutation.mutate()}
-        disabled={resetMutation.isPending}
-        style={{ margin: '1em 0', padding: '0.5em 1em' }}
-      >
-        {resetMutation.isPending ? 'Resetting...' : 'Reset Account'}
-      </button>
       <h3>Transaction History</h3>
       <table className="min-w-full border mt-2">
         <thead>
