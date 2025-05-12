@@ -1,4 +1,3 @@
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import {
   Outlet,
   RouterProvider,
@@ -6,7 +5,6 @@ import {
   createRoute,
   createRouter,
 } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
@@ -16,7 +14,8 @@ import {
   getReactQueryContext,
 } from './context/react-query.tsx'
 import reportWebVitals from './reportWebVitals.ts'
-import TickerTableRoute from './routes/tickers.tsx'
+import UserRoute from './routes/user.tsx'
+import TradeRoute from './routes/trade.tsx'
 import './styles.css'
 
 const rootRoute = createRootRoute({
@@ -24,8 +23,6 @@ const rootRoute = createRootRoute({
     <>
       <Header />
       <Outlet />
-      <TanStackRouterDevtools />
-      <ReactQueryDevtools buttonPosition="bottom-right" />
     </>
   ),
 })
@@ -36,7 +33,8 @@ const routeTree = rootRoute.addChildren([
     path: '/',
     component: App,
   }),
-  TickerTableRoute(rootRoute),
+  UserRoute(rootRoute),
+  TradeRoute(rootRoute)
 ])
 
 const router = createRouter({
