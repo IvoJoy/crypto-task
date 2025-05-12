@@ -149,7 +149,7 @@ npm run check
 
 1. User submits a trade through the UI form
 2. React Query's useMutation hook sends request to the API
-3. API controller validates the trade and executes it in a database transaction
+3. API controller validates the trade and executes it in a database transaction against the latest bid/ask prices held in Redis
 4. React Query updates its cache with the response
 5. UI reactively updates to reflect the new state
 
